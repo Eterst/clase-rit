@@ -19,6 +19,7 @@ def borrarStopwords():
     for w in tokens:
         if w not in stop_words:
             filtered_sentence.append(w)
+    return filtered_sentence
 
 def lemantizarTokens():
     lemmatizer = WordNetLemmatizer()
@@ -26,4 +27,6 @@ def lemantizarTokens():
 def termSelect():
     print("a")
 
-print(tokens[0:10])
+sin_stopwords = borrarStopwords()
+
+print(sin_stopwords[0:10])
