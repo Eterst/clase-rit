@@ -18,13 +18,17 @@ import unidecode
 # Si no funciona correr los siguientes comandos en consola de python_
 #   nltk.download('wordnet')
 
+# Obtenemos sinonimos con un webscrapper. No es lo mas eficiente pero nada que hacer no hay nltk español ヽ(ヅ)ノ
+# Por esto mismo limitamos la cantidad de palabras que buscamos sinonimos con esta global
+MAX_TESAURUS_WORDS = 5
+
 archivo = open("EXTRA_23-2019,_28_NOV_17-12-2019_09_11_31.txt", encoding="utf8")
 tokens = nltk.word_tokenize(archivo.read())
 
+#si lematize = true va a lematizar tambien 
 def borrarStopWords(lematize):
     stop_words = set(stopwords.words('spanish'))
 
-    #filtered_sentence = [w for w in tokens if not w.lower() in stop_words]
     diccionario = dict()
 
     for w in tokens:
@@ -37,35 +41,38 @@ def borrarStopWords(lematize):
     filtered_sentence = list(diccionario.values())
     return filtered_sentence
 
+# Aqui se hace la lematización
 def lematizeWord(diccionario, w):
     lemmatizer = WordNetLemmatizer()
-    # Aqui se hace la lematización
     punishedW = lemmatizer.lemmatize(w)
     diccionario[hashlib.md5(punishedW.encode()).hexdigest()] = punishedW
 
 def selection(tokens):
     filtered_set = []
     for w in tokens:
-        if len(w) == 7 and (w[0] == 'a' or w[0]=='d'):
+        if w[0] == 'a' and not w[0].isnumeric() and not w[-1].isnumeric():
             filtered_set.append(w)
-    return filtered_set[0:5]
+    return filtered_set[0:MAX_TESAURUS_WORDS]
 
+# 🦖🦖🦖
 def Tesauros(filtered_tokens):
     word_matrix = []
-    
-    for i in filtered_tokens:
-        print(i)
-        with urllib.request.urlopen('https://educalingo.com/en/dic-es/{}'.format(unidecode.unidecode(i))) as url:
-            data = url.read()
-            print("pidio")
-            final_results = re.findall('\w+', [i.text for i in soup(data, 'lxml').find_all('div', {"class":'contenido_sinonimos_antonimos0'})][0])
-            word_matrix.append(final_results)
+    for j in filtered_tokens:
+        # Obtenemos sinonimos con un webscrapper. No es lo mas eficiente pero nada que hacer no hay nltk español ヽ(ヅ)ノ
+        try:
+            with urllib.request.urlopen('https://educalingo.com/en/dic-es/{}'.format(unidecode.unidecode(j))) as url:
+                data = url.read()
+                print('https://educalingo.com/en/dic-es/{}'.format(unidecode.unidecode(j)))
+                final_results = re.findall('\w+', [i.text for i in soup(data, 'lxml').find_all('div', {"class":'contenido_sinonimos_antonimos0'})][0])
+                word_matrix.append(final_results)
+        except:
+            pass
 
     return word_matrix
 
 sin_stopwords = borrarStopWords(True)
 filtered_set = selection(sin_stopwords)
-sinonym_matrix = Tesauros(filtered_set)
+sinonym_matrix = Tesauros(filtered_set[0:5]) #recomendado no quitar el limitante 
 
 #print(filtered_set)
 print(sinonym_matrix)
